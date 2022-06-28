@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Butterfly Classification App</title>
+</head>
+
+<body>
+    <h1>Butterfly Classification App</h1>
+    <h3>ML Model developed by Haikal Susanto</h3>
+
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class=flashes>
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+
+    {% if img_uri %}
+	<div>
+		<img src="{{ img_uri }}">
+	</div>
+    {% endif %}
+
+    <form action = {{url_for('upload_image')}} method = "POST" enctype = "multipart/form-data">
+        <input type = "file" name = "image" />
+        <input type = "submit"/>
+    </form>
+</body>
+
+
+</html>
