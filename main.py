@@ -1,9 +1,15 @@
 import os
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from base64 import b64encode
-from PIL import Image
 from io import BytesIO
 from dotenv import load_dotenv
+
+import pandas as pd
+from ResNet import ResNet50
+import torch
+import torchvision.transforms as transforms
+from PIL import Image
+
 
 load_dotenv()
 
@@ -14,6 +20,21 @@ app.config['MAX_CONTENT_LENGTH'] = 8 * 1000 * 1000
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+class_names = pd.read_csv("./utils/CLASS_NAMES.csv")
+common_names = class_names['COMMON NAME']
+scientific_names = class_names['SCIENTIFIC NAME']
+
+PATH_MODEL="./ml_models/resnet50_v2.save"
+net = ResNet50(img_channels=3, num_classes=75)
+state_dict = torch.load(PATH_MODEL, map_location=torch.device("cpu"))
+
+net.load_state_dict(state_dict)
+net.eval()
+
+data_transform = transforms.Compose([
+                    transforms.ToTensor()
+                  ])
 
 @app.route("/", methods=['GET'])
 def home():
@@ -41,6 +62,15 @@ def upload_image():
         newsize = (224, 224)
         image_pil = image_pil.resize(newsize)
 
+        image_transformed = data_transform(image_pil).unsqueeze(0)
+        with torch.no_grad():
+            outputs = net(image_transformed)
+            _, preds = torch.max(outputs, 1)
+        
+        preds = preds[0].item()
+        common = common_names[preds]
+        scientific = scientific_names[preds]
+
         buffered = BytesIO()
         image_pil.save(buffered, format="PNG")
 
@@ -52,7 +82,7 @@ def upload_image():
         flash('Allowed image types: png, jpg, jpeg')
         return redirect(url_for('home'))
 
-    return render_template('index.html', img_uri=img_uri)
+    return render_template('index.html', img_uri=img_uri, common=common, scientific=scientific)
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
