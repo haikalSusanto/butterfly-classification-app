@@ -1,0 +1,11 @@
+version: "3.7"
+
+services:
+  butterfly-classification-app:
+    container_name: butterfly-classification-app
+    image: butterfly-classification-app
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-sample_secret}
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
