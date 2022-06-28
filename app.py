@@ -3,11 +3,12 @@ from flask import Flask, flash, redirect, render_template, request, session, url
 from base64 import b64encode
 from PIL import Image
 from io import BytesIO
+from dotenv import load_dotenv
 
-
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'so_secret'
+app.secret_key = os.environ.get('SECRET_KEY')
 app.config['MAX_CONTENT_LENGTH'] = 8 * 1000 * 1000
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
